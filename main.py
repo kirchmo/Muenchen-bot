@@ -86,7 +86,7 @@ def check():
         return
 
     if earliest < last_earliest:
-        send_telegram(f"⚡ Früherer Termin verfügbar: {earliest}")
+        send_telegram(f"⚡ Früherer Termin verfügbar: {earliest} Link https://stadt.muenchen.de/buergerservice/terminvereinbarung.html#/appointment/eyJpZCI6MTUyNTkxLCJhdXRoS2V5IjoiY2JmMyJ")
         last_earliest = earliest
     else:
         print("Keine Änderung")
