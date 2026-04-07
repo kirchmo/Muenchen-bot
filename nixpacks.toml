@@ -1,0 +1,20 @@
+[phases.setup]
+nixPkgs = [
+  "glib",
+  "nss",
+  "atk",
+  "at-spi2-atk",
+  "cups",
+  "libdrm",
+  "libxkbcommon",
+  "libxcomposite",
+  "libxdamage",
+  "libxrandr",
+  "pango",
+  "cairo",
+  "expat",
+  "fontconfig",
+  "freetype",
+  "gtk3",
+  "libgbm"
+]
