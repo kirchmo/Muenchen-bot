@@ -1,4 +1,3 @@
-send_telegram("🤖 Bot gestartet - Telegram funktioniert")
 import requests
 import os
 from datetime import datetime
@@ -28,6 +27,7 @@ def send_telegram(message):
         "text": message
     })
 
+send_telegram("🤖 Bot gestartet - Telegram funktioniert")
 
 # ===== API FETCH =====
 
