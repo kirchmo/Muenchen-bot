@@ -1,6 +1,5 @@
 import requests
 import os
-from datetime import datetime
 from dateutil import parser
 import time
 
@@ -13,7 +12,7 @@ BOOKING_URL = "https://stadt.muenchen.de/buergerservice/terminvereinbarung.html#
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-TARGET_MONTH = 4
+TARGET_MONTHS = [4, 5]  # April + Mai
 TARGET_YEAR = 2026
 
 last_earliest = None
@@ -53,6 +52,9 @@ def fetch_dates():
 
     data = response.json()
 
+    # 🔥 IMMER RAW RESPONSE LOGGEN
+    print("RAW API RESPONSE:", data)
+
     dates = []
 
     for entry in data.get("availableDays", []):
@@ -79,34 +81,34 @@ def check():
         print("Keine Termine gefunden")
         return
 
-    # 🎯 Filter: nur April 2026
-    april_dates = [
+    # 🎯 Filter: April + Mai 2026
+    filtered_dates = [
         d for d in dates
-        if d.month == TARGET_MONTH and d.year == TARGET_YEAR
+        if d.month in TARGET_MONTHS and d.year == TARGET_YEAR
     ]
 
-    if not april_dates:
-        print("Keine Termine im April verfügbar")
+    if not filtered_dates:
+        print("Keine Termine im April oder Mai verfügbar")
         return
 
-    earliest = min(april_dates)
+    earliest = min(filtered_dates)
 
-    print("Frühester April-Termin:", earliest.date())
+    print("Frühester Termin:", earliest.date())
 
     if last_earliest is None:
         last_earliest = earliest
         send_telegram(
-            f"ℹ️ Frühester April-Termin: {earliest.date()}\n\n👉 Jetzt buchen:\n{BOOKING_URL}"
+            f"ℹ️ Frühester Termin (Apr/Mai): {earliest.date()}\n\n👉 Jetzt buchen:\n{BOOKING_URL}"
         )
         return
 
     if earliest < last_earliest:
         send_telegram(
-            f"⚡ Früherer April-Termin verfügbar: {earliest.date()}\n\n👉 Jetzt buchen:\n{BOOKING_URL}"
+            f"⚡ Früherer Termin verfügbar: {earliest.date()}\n\n👉 Jetzt buchen:\n{BOOKING_URL}"
         )
         last_earliest = earliest
     else:
-        print("Keine Verbesserung im April")
+        print("Keine Verbesserung")
 
 
 # ===== MAIN LOOP =====
@@ -121,4 +123,4 @@ if __name__ == "__main__":
         except Exception as e:
             print("Error:", e)
 
-        time.sleep(60)  # alle 5 Minuten
+        time.sleep(60)  # ⏱️ alle 60 Sekunden
