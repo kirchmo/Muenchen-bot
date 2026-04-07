@@ -4,14 +4,17 @@ from datetime import datetime
 from dateutil import parser
 import time
 
+# ===== CONFIG =====
+
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-# ⚠️ Diese API stammt aus dem Netzwerk-Call der Terminseite
-API_URL = "https://terminvereinbarung.muenchen.de/api/slots?serviceId=1063648&locationId=10470"
+API_URL = "https://www48.muenchen.de/buergeransicht/api/citizen/available-days-by-office/?startDate=2026-04-07&endDate=2026-10-07&officeId=10470&serviceId=1063648&serviceCount=1"
 
 last_earliest = None
 
+
+# ===== TELEGRAM =====
 
 def send_telegram(message):
     if not TELEGRAM_TOKEN or not CHAT_ID:
@@ -25,52 +28,69 @@ def send_telegram(message):
     })
 
 
-def fetch_earliest_date():
+# ===== API FETCH =====
+
+def fetch_dates():
     headers = {
         "User-Agent": "Mozilla/5.0",
-        "Accept": "application/json"
+        "Accept": "application/json",
+        "Referer": "https://stadt.muenchen.de/"
     }
 
     response = requests.get(API_URL, headers=headers, timeout=10)
 
     if response.status_code != 200:
         print("API error:", response.status_code)
-        return None
+        return []
 
     data = response.json()
 
     dates = []
 
-    # ⚠️ Struktur kann variieren → typische Felder:
-    # data -> slots -> date / start / time etc.
-    for slot in data.get("slots", []):
-        date_str = slot.get("start") or slot.get("date")
+    # Struktur prüfen (typisch: Liste von Tagen)
+    # Beispiel: [{"date": "2026-04-10", ...}, ...]
 
-        if date_str:
-            try:
-                dt = parser.parse(date_str)
-                dates.append(dt)
-            except:
-                pass
+    if isinstance(data, list):
+        for entry in data:
+            date_str = entry.get("date")
+            if date_str:
+                try:
+                    dt = parser.parse(date_str)
+                    dates.append(dt)
+                except:
+                    pass
 
-    if not dates:
-        return None
+    elif isinstance(data, dict):
+        # fallback falls API anders strukturiert ist
+        for key, value in data.items():
+            if isinstance(value, list):
+                for entry in value:
+                    date_str = entry.get("date") or entry.get("day")
+                    if date_str:
+                        try:
+                            dt = parser.parse(date_str)
+                            dates.append(dt)
+                        except:
+                            pass
 
-    return min(dates)
+    return dates
 
+
+# ===== LOGIC =====
 
 def check():
     global last_earliest
 
-    earliest = fetch_earliest_date()
+    dates = fetch_dates()
 
-    if not earliest:
+    if not dates:
         print("Keine Termine gefunden")
         return
 
+    earliest = min(dates)
+
     print("Frühester Termin:", earliest)
 
-    # Vergleich
     if last_earliest is None:
         last_earliest = earliest
         send_telegram(f"ℹ️ Aktuell frühester Termin: {earliest}")
@@ -80,8 +100,10 @@ def check():
         send_telegram(f"⚡ Früherer Termin verfügbar: {earliest}")
         last_earliest = earliest
     else:
-        print("Keine Verbesserung")
+        print("Keine Änderung")
 
+
+# ===== MAIN LOOP =====
 
 if __name__ == "__main__":
     send_telegram("🤖 Termin-Bot gestartet")
@@ -89,4 +111,4 @@ if __name__ == "__main__":
     while True:
         print("Checking...")
         check()
-        time.sleep(300)
+        time.sleep(300)  # alle 5 Minuten
