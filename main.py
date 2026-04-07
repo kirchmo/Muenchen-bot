@@ -27,7 +27,7 @@ def send_telegram(message):
         "text": message
     })
 
-send_telegram(f"ℹ️ Aktuell frühester Termin: {earliest}\n\n👉 Link:\n{BOOKING_URL}")
+
 
 # ===== API FETCH =====
 
