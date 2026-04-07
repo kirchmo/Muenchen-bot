@@ -100,4 +100,4 @@ if __name__ == "__main__":
     while True:
         print("Checking...")
         check()
-        time.sleep(60)  # alle 5 Minuten
+        time.sleep(120)  # alle 5 Minuten
