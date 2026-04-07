@@ -1,3 +1,4 @@
+send_telegram("🤖 Bot gestartet - Telegram funktioniert")
 import requests
 import os
 from datetime import datetime
