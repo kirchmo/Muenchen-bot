@@ -45,28 +45,21 @@ def fetch_dates():
 
     data = response.json()
 
-    # 🔍 DEBUG: komplette Antwort anzeigen (wichtig!)
     print("RAW API RESPONSE:", data)
 
     dates = []
 
-    def extract_dates(obj):
-        if isinstance(obj, dict):
-            for k, v in obj.items():
-                if k.lower() in ["date", "start", "day", "datum"]:
-                    try:
-                        dt = parser.parse(str(v))
-                        dates.append(dt)
-                    except:
-                        pass
-                else:
-                    extract_dates(v)
+    available_days = data.get("availableDays", [])
 
-        elif isinstance(obj, list):
-            for item in obj:
-                extract_dates(item)
+    for entry in available_days:
+        date_str = entry.get("time")  # ✅ WICHTIG: "time"
 
-    extract_dates(data)
+        if date_str:
+            try:
+                dt = parser.parse(date_str)
+                dates.append(dt)
+            except Exception as e:
+                print("Parse error:", e)
 
     return dates
 
