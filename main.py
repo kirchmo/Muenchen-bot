@@ -45,33 +45,28 @@ def fetch_dates():
 
     data = response.json()
 
+    # 🔍 DEBUG: komplette Antwort anzeigen (wichtig!)
+    print("RAW API RESPONSE:", data)
+
     dates = []
 
-    # Struktur prüfen (typisch: Liste von Tagen)
-    # Beispiel: [{"date": "2026-04-10", ...}, ...]
+    def extract_dates(obj):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if k.lower() in ["date", "start", "day", "datum"]:
+                    try:
+                        dt = parser.parse(str(v))
+                        dates.append(dt)
+                    except:
+                        pass
+                else:
+                    extract_dates(v)
 
-    if isinstance(data, list):
-        for entry in data:
-            date_str = entry.get("date")
-            if date_str:
-                try:
-                    dt = parser.parse(date_str)
-                    dates.append(dt)
-                except:
-                    pass
+        elif isinstance(obj, list):
+            for item in obj:
+                extract_dates(item)
 
-    elif isinstance(data, dict):
-        # fallback falls API anders strukturiert ist
-        for key, value in data.items():
-            if isinstance(value, list):
-                for entry in value:
-                    date_str = entry.get("date") or entry.get("day")
-                    if date_str:
-                        try:
-                            dt = parser.parse(date_str)
-                            dates.append(dt)
-                        except:
-                            pass
+    extract_dates(data)
 
     return dates
 
